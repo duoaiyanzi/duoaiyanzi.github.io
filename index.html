@@ -1,0 +1,1256 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<title>小燕子专线</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://fonts.loli.net/css2?family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&display=swap" media="print" onload="this.media='all'">
+<style>:root{color-scheme:light;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<style>
+/* 布局：单列聊天窗。顶部一根电线，燕子蹲在线上；开场是一封航空信，拆开才接通专线 */
+:root{
+  --sky:#e8eff7; --sky-hi:#f4f8fc; --ink:#1c2642; --ink-soft:#5a6684;
+  --throat:#d6463a; --throat-ink:#ffffff; --belly:#ffffff; --line:#cdd8e6; --wire:#8d99b4;
+  --paper:#fbfcff; --paper-2:#e9eff8; --air:#2f5fae; --shadow:rgba(28,38,66,.16); --scrim:rgba(12,18,36,.42);
+  --r-n:#5f6a84; --r-r:#2563b0; --r-sr:#6545b8; --r-ssr:#94680d;
+  --ok:#2fb36a; --warn:#e0a325;
+  --f-display:"ZCOOL KuaiLe","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --f-brush:"Ma Shan Zheng","Kaiti SC","STKaiti","KaiTi","PingFang SC",serif;
+  --f-letter:"Songti SC","STSong","Noto Serif SC","Source Han Serif SC",serif;
+  --f-body:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --sky:#0e1426; --sky-hi:#141c33; --ink:#e7ecf6; --ink-soft:#97a3c0;
+    --throat:#ee6553; --throat-ink:#ffffff; --belly:#1a2340; --line:#2a365c; --wire:#5d6a8c;
+    --paper:#1b2544; --paper-2:#243058; --air:#6f9be6; --shadow:rgba(0,0,0,.45); --scrim:rgba(0,0,0,.55);
+    --ok:#45c97f; --warn:#f0b840;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --sky:#0e1426; --sky-hi:#141c33; --ink:#e7ecf6; --ink-soft:#97a3c0;
+  --throat:#ee6553; --throat-ink:#ffffff; --belly:#1a2340; --line:#2a365c; --wire:#5d6a8c;
+  --paper:#1b2544; --paper-2:#243058; --air:#6f9be6; --shadow:rgba(0,0,0,.45); --scrim:rgba(0,0,0,.55);
+  --ok:#45c97f; --warn:#f0b840;
+  color-scheme:dark;
+}
+html{height:100%;box-sizing:border-box}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;margin:0;background:var(--sky);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--throat);outline-offset:2px}
+.app{height:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* ---------- 顶栏 ---------- */
+header{position:relative;padding-block:12px 26px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.brand{min-width:0}
+.brand h1{margin:0;font-family:var(--f-display);font-weight:400;font-size:26px;letter-spacing:.04em;line-height:1.15;user-select:none;-webkit-user-select:none}
+.status{margin-top:3px;font-size:12.5px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--wire);flex:none}
+.status[data-mode="api"] .dot,.status[data-mode="claude"] .dot{background:var(--ok)}
+.status[data-mode="local"] .dot{background:var(--warn)}
+.tools{display:flex;gap:8px;flex:none;padding-top:2px}
+.icon-btn{position:relative;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--belly);color:var(--ink);display:grid;place-items:center;padding:0}
+.icon-btn svg{width:20px;height:20px;display:block}
+.icon-btn.heart{color:var(--throat)}
+.icon-btn:active{transform:scale(.92)}
+.badge{position:absolute;top:-5px;right:-7px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--throat);color:var(--throat-ink);font-size:11px;line-height:18px;text-align:center;font-variant-numeric:tabular-nums}
+.wire{position:absolute;left:-16px;right:-16px;bottom:0;height:22px;pointer-events:none}
+.wire svg{width:100%;height:100%;display:block}
+.perch{position:absolute;right:24%;bottom:9px;width:34px;height:22px;pointer-events:none}
+.perch svg{width:100%;height:100%;display:block}
+
+/* ---------- 聊天 ---------- */
+main{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-block:14px 8px;-webkit-overflow-scrolling:touch}
+.row{display:flex;gap:8px;align-items:flex-end;min-width:0}
+.row.her{justify-content:flex-end}
+.row.bot + .row.bot .av{visibility:hidden}
+.av{flex:none;width:30px;height:30px;border-radius:50%;background:var(--belly);border:1px solid var(--line);display:grid;place-items:center}
+.av svg{width:22px;height:14px;display:block}
+.bubble{max-width:78%;min-width:0;padding:8px 13px;border-radius:18px;white-space:pre-wrap;overflow-wrap:anywhere}
+.bot .bubble{background:var(--belly);border:1px solid var(--line);border-bottom-left-radius:6px}
+.her .bubble{background:var(--throat);color:var(--throat-ink);border-bottom-right-radius:6px}
+.bubble.cut{opacity:.7}
+.row.her + .row.bot,.row.bot + .row.her{margin-top:6px}
+.typing{font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:8px;padding-left:38px}
+.dots{display:inline-flex;gap:3px}
+.dots i{width:5px;height:5px;border-radius:50%;background:var(--ink-soft);animation:hop 1s infinite ease-in-out}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes hop{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-4px);opacity:1}}
+
+.stamp-row{align-self:center;display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-soft);padding:6px 12px;border-radius:12px;background:var(--sky-hi);border:1px dashed var(--line);max-width:92%;margin-block:4px}
+.stamp-row b{color:var(--ink);font-weight:600}
+.seal-mini{flex:none;width:26px;height:26px;border-radius:5px;border:1.5px solid var(--throat);color:var(--throat);display:grid;place-items:center;font-family:var(--f-brush);font-size:16px;line-height:1;transform:rotate(-10deg)}
+.stamp-row.in{animation:stampin .45s cubic-bezier(.2,1.5,.4,1)}
+@keyframes stampin{0%{transform:scale(1.5);opacity:0}100%{transform:none;opacity:1}}
+
+.capsule{max-width:82%;min-width:0;border-radius:16px;border:1.5px solid var(--tc);background:var(--belly);overflow:hidden}
+.capsule .cap-top{display:flex;align-items:baseline;gap:8px;padding:5px 12px;background:var(--tc);color:#fff;font-size:12px;letter-spacing:.06em}
+.capsule .tier{font-family:var(--f-display);font-size:17px;letter-spacing:.08em}
+.capsule .cap-text{padding:10px 13px;white-space:pre-wrap;overflow-wrap:anywhere}
+.capsule .cap-bonus{padding:0 13px 10px;font-size:12.5px;color:var(--ink-soft)}
+.t-N{--tc:var(--r-n)}.t-R{--tc:var(--r-r)}.t-SR{--tc:var(--r-sr)}.t-SSR{--tc:var(--r-ssr)}
+.capsule.pop{animation:pop .55s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{0%{transform:scale(.55) rotate(-8deg);opacity:0}100%{transform:none;opacity:1}}
+
+/* ---------- 快捷按钮 & 输入 ---------- */
+.chips{display:flex;gap:8px;overflow-x:auto;padding-block:6px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font-size:14px;padding:6px 13px;border-radius:999px;border:1px solid var(--line);background:var(--belly);color:var(--ink)}
+.chip.gacha{border-color:var(--r-ssr);border-width:1.5px}
+.chip:active{transform:scale(.95)}
+.chip:disabled{opacity:.5}
+form.composer{display:flex;gap:8px;padding-block:6px 12px}
+.composer input{flex:1;min-width:0;font-size:16px;padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:var(--belly);color:var(--ink)}
+.composer input::placeholder{color:var(--ink-soft)}
+.send{flex:none;font-family:var(--f-display);font-size:17px;padding:0 18px;min-height:44px;border:none;border-radius:999px;background:var(--throat);color:var(--throat-ink)}
+.send:disabled{opacity:.5;cursor:default}
+
+/* ---------- 飘心 & 飞燕 ---------- */
+.float-heart{position:fixed;z-index:50;pointer-events:none;color:var(--throat);font-size:22px;line-height:1;animation:floatup .95s ease-out forwards}
+@keyframes floatup{0%{transform:translate(-50%,0) scale(.6);opacity:1}100%{transform:translate(calc(-50% + var(--dx,0px)),-70px) scale(1.3);opacity:0}}
+.flyer{position:fixed;left:0;top:0;width:72px;height:45px;z-index:60;pointer-events:none;animation:fly 1.5s cubic-bezier(.45,.05,.4,1) forwards}
+.flyer svg{width:100%;height:100%;display:block;animation:flap .16s ease-in-out infinite alternate;transform-origin:50% 40%}
+@keyframes fly{0%{transform:translate(-90px,72vh) rotate(-16deg) scale(.7)}55%{transform:translate(48vw,34vh) rotate(-8deg) scale(1)}100%{transform:translate(110vw,-12vh) rotate(-22deg) scale(.75)}}
+@keyframes flap{from{transform:scaleY(1)}to{transform:scaleY(.55)}}
+
+/* ---------- 开场：航空信 ---------- */
+.gate{position:fixed;inset:0;z-index:30;background:var(--sky);overflow-y:auto;display:flex;transition:opacity .45s ease;
+  padding:calc(env(safe-area-inset-top,0px) + 24px) max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 24px) max(16px,env(safe-area-inset-left,0px))}
+.gate.leaving{opacity:0;pointer-events:none}
+.scene{margin:auto;width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.scene h2{margin:6px 0 0;font-family:var(--f-display);font-weight:400;font-size:32px;letter-spacing:.06em;text-wrap:balance}
+.scene p{margin:0;color:var(--ink-soft);font-size:14.5px;text-wrap:balance}
+.env{position:relative;width:min(300px,84vw);aspect-ratio:3/2;perspective:700px;margin-top:28px}
+.env-body{position:absolute;inset:0;border-radius:12px;border:7px solid transparent;
+  background:linear-gradient(var(--paper),var(--paper)) padding-box,
+    repeating-linear-gradient(-45deg,var(--throat) 0 9px,var(--paper) 9px 14px,var(--air) 14px 23px,var(--paper) 23px 28px) border-box;
+  box-shadow:0 12px 32px var(--shadow)}
+.env-flap{position:absolute;left:7px;right:7px;top:7px;height:56%;background:var(--paper-2);clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:50% 0;transition:transform .6s cubic-bezier(.4,.1,.3,1);z-index:2}
+.wax{position:absolute;left:50%;top:calc(7px + (100% - 14px) * .56);width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:var(--throat);color:#fff;display:grid;place-items:center;
+  font-family:var(--f-brush);font-size:28px;line-height:1;z-index:3;box-shadow:0 3px 8px var(--shadow),inset 0 0 0 3px rgba(255,255,255,.22);transition:transform .35s,opacity .35s}
+.env-to{position:absolute;left:0;right:0;bottom:13%;font-family:var(--f-brush);font-size:23px;color:var(--ink);letter-spacing:.08em;z-index:1}
+.gate.opening .env-flap{transform:rotateX(178deg)}
+.gate.opening .wax{transform:scale(1.3);opacity:0}
+.gate-form{display:flex;gap:8px;width:100%}
+.gate-form input{flex:1;min-width:0;font-size:16px;padding:11px 14px;border-radius:999px;border:1px solid var(--line);background:var(--belly);color:var(--ink);text-align:center}
+.gate-msg{min-height:1.6em;color:var(--throat);font-size:14px}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.scene-seal.fading{opacity:0;transition:opacity .3s}
+
+.letter{position:relative;width:100%;background:var(--paper);border-radius:14px;padding:26px 22px 20px;text-align:left;box-shadow:0 12px 32px var(--shadow)}
+.letter::before{content:"";position:absolute;left:0;right:0;top:0;height:7px;border-radius:14px 14px 0 0;
+  background:repeating-linear-gradient(90deg,var(--throat) 0 18px,var(--paper) 18px 24px,var(--air) 24px 42px,var(--paper) 42px 48px)}
+.letter .to{font-family:var(--f-brush);font-size:28px;line-height:1.3;margin-bottom:6px}
+.letter p{margin:0 0 6px;font-family:var(--f-letter);font-size:16.5px;line-height:1.95;text-indent:2em;color:var(--ink)}
+.letter .sign{margin-top:12px;text-align:right;font-family:var(--f-brush);font-size:26px;line-height:1.2}
+.letter .date{text-align:right;font-size:12.5px;color:var(--ink-soft);margin-top:2px}
+.scene-letter.in .letter{animation:rise .65s cubic-bezier(.2,.8,.3,1) both}
+.scene-letter.in .go{animation:rise .65s .25s cubic-bezier(.2,.8,.3,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(34px)}to{opacity:1;transform:none}}
+
+/* ---------- 底部弹层 ---------- */
+.sheet{position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center;background:var(--scrim)}
+.panel{width:100%;max-width:560px;max-height:88%;overflow-y:auto;background:var(--sky-hi);border-radius:20px 20px 0 0;animation:up .28s ease-out;
+  padding:16px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
+.panel-head h3{margin:0;font-family:var(--f-display);font-weight:400;font-size:21px;letter-spacing:.04em}
+.close{border:none;background:none;color:var(--ink-soft);font-size:15px;padding:6px 4px}
+.primary{width:100%;min-height:46px;border:none;border-radius:14px;background:var(--throat);color:var(--throat-ink);font-family:var(--f-display);font-size:18px;letter-spacing:.04em;margin-top:14px}
+.secondary{width:100%;min-height:44px;border:1px solid var(--line);border-radius:14px;background:var(--belly);color:var(--ink);font-size:15px;margin-top:10px}
+.secondary.danger{color:var(--throat)}
+.note{font-size:13px;color:var(--ink-soft);margin:8px 0 0}
+
+/* 欠条 */
+.iou{position:relative;background:var(--paper);border-radius:12px;padding:20px 18px 18px;box-shadow:0 6px 18px var(--shadow)}
+.iou-title{text-align:center;font-family:var(--f-brush);font-size:34px;letter-spacing:.5em;padding-left:.5em;line-height:1.2;margin-bottom:8px}
+.iou-lines{font-family:var(--f-letter);font-size:16px;line-height:34px;
+  background-image:repeating-linear-gradient(transparent 0 33px,var(--line) 33px 34px)}
+.iou-lines ol{margin:0;padding-left:1.6em}
+.iou-lines li{position:relative;padding-right:52px}
+.paid{position:absolute;right:0;top:6px;height:22px;line-height:20px;font-size:12px;padding:0 8px;border-radius:11px;border:1px solid var(--line);background:var(--belly);color:var(--ink-soft);font-family:var(--f-body)}
+.iou-empty{color:var(--ink-soft)}
+.iou-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:14px;font-family:var(--f-letter);font-size:14px;line-height:1.6}
+.iou-foot small{color:var(--ink-soft);font-family:var(--f-body);font-size:12px}
+.seal-big{flex:none;width:58px;height:58px;border:2.5px solid var(--throat);border-radius:6px;color:var(--throat);display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;place-items:center;
+  font-family:var(--f-brush);font-size:20px;line-height:1;padding:3px;transform:rotate(-8deg);opacity:.9}
+.seal-big span:nth-child(1){grid-area:1/2}.seal-big span:nth-child(2){grid-area:2/2}.seal-big span:nth-child(3){grid-area:1/1}.seal-big span:nth-child(4){grid-area:2/1}
+.copy-out{width:100%;min-height:150px;margin-top:10px;border-radius:12px;border:1px solid var(--line);background:var(--belly);color:var(--ink);padding:10px;font-size:14px}
+
+/* 菜单 & 后台 */
+.menu-list{display:flex;flex-direction:column;gap:10px}
+.menu-list .secondary{margin-top:0}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;font-size:13.5px;color:var(--ink-soft)}
+.field input,.field select{font-size:16px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--belly);color:var(--ink);width:100%;min-width:0}
+.two{display:flex;gap:10px}
+.two > *{flex:1;min-width:0}
+.ad-state{font-size:13px;padding:8px 12px;border-radius:10px;background:var(--belly);border:1px solid var(--line);margin-bottom:12px}
+.ad-out{font-size:14px;margin-top:10px;min-height:1.4em;overflow-wrap:anywhere}
+.ad-out.good{color:var(--ok)}.ad-out.bad{color:var(--throat)}
+
+@media (prefers-reduced-motion: reduce){
+  .dots i,.shake,.capsule.pop,.stamp-row.in,.float-heart,.panel,.scene-letter.in .letter,.scene-letter.in .go{animation:none}
+  .env-flap,.wax,.gate{transition:none}
+  .chip:active,.icon-btn:active{transform:none}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="swallow" viewBox="0 0 64 40">
+    <path fill="var(--ink)" d="M32 7c-2.6 0-4.6 2.3-4.9 5.2L3 5c5 9.6 13.4 15 23.6 16.2L28 29l-4.6 10 8.6-7.6 8.6 7.6L36 29l1.4-7.8C47.6 20 56 14.6 61 5l-24.1 7.2C36.6 9.3 34.6 7 32 7z"/>
+    <ellipse cx="32" cy="15.2" rx="2.6" ry="2.3" fill="var(--throat)"/>
+  </symbol>
+  <symbol id="perched" viewBox="0 0 34 22">
+    <path fill="var(--ink)" d="M8 8c0-3 2.4-5 5-5 2 0 3.4 1 4.2 2.6L31 15l-9 .4-4.4 4.6H11.5C9 20 7 18 7 15.4z"/>
+    <path fill="var(--ink)" d="M22 15.4 33 21l-12.6-2z"/>
+    <circle cx="10.6" cy="7" r="1" fill="var(--sky)"/>
+    <path fill="var(--throat)" d="M7.4 10.6c.6 2 2 3 3.8 3.2-1.8.6-3.6.2-4.4-1.2z"/>
+    <path fill="var(--belly)" d="M9 15.6c1.6 2.2 4 3 6.6 2.6L11.5 20C9.6 20 8.4 18 9 15.6z" opacity=".9"/>
+  </symbol>
+</svg>
+
+<div class="app">
+  <header>
+    <div class="brand">
+      <h1 id="title">小燕子专线</h1>
+      <div class="status" id="status" data-mode="pending"><span class="dot"></span><span id="statusText">多多2号正在上线…</span></div>
+    </div>
+    <div class="tools">
+      <button class="icon-btn heart" id="missBtn" type="button" aria-label="想多多">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        <span class="badge" id="missBadge" hidden>0</span>
+      </button>
+      <button class="icon-btn" id="debtBtn" type="button" aria-label="多多的欠条">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 8h6M9 12h6M9 16h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span class="badge" id="debtBadge" hidden>0</span>
+      </button>
+      <button class="icon-btn" id="menuBtn" type="button" aria-label="更多">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/></svg>
+      </button>
+    </div>
+    <div class="wire" aria-hidden="true">
+      <svg viewBox="0 0 400 22" preserveAspectRatio="none"><path d="M0 4 Q200 26 400 4" fill="none" stroke="var(--wire)" stroke-width="1.2" vector-effect="non-scaling-stroke"/></svg>
+    </div>
+    <div class="perch" aria-hidden="true"><svg><use href="#perched"/></svg></div>
+  </header>
+
+  <main id="msgs" aria-live="polite"></main>
+
+  <div class="chips" id="chips" role="group" aria-label="快捷消息"></div>
+
+  <form class="composer" id="composer">
+    <input id="box" type="text" autocomplete="off" enterkeyhint="send" maxlength="500" placeholder="跟多多2号说点什么…" aria-label="消息">
+    <button class="send" id="send" type="submit">发送</button>
+  </form>
+</div>
+
+<!-- 开场：拆信 -->
+<div class="gate" id="gate" hidden>
+  <div class="scene scene-seal" id="sceneSeal">
+    <div class="env" aria-hidden="true">
+      <div class="env-body"></div>
+      <div class="env-flap"></div>
+      <div class="wax">燕</div>
+      <div class="env-to">小燕子 亲启</div>
+    </div>
+    <h2>小燕子专线</h2>
+    <p>这封信只投递给一个人。<br>请写下收信人的全名。</p>
+    <form class="gate-form" id="gateForm">
+      <input id="gateBox" type="text" autocomplete="off" enterkeyhint="go" placeholder="收信人全名" aria-label="收信人全名">
+      <button class="send" type="submit">拆信</button>
+    </form>
+    <div class="gate-msg" id="gateMsg" role="status"></div>
+  </div>
+  <div class="scene scene-letter" id="sceneLetter" hidden>
+    <article class="letter">
+      <div class="to">小燕子：</div>
+      <div id="letterBody"></div>
+      <div class="sign">多多</div>
+      <div class="date" id="letterDate"></div>
+    </article>
+    <button class="primary go" id="letterGo" type="button">接通专线</button>
+  </div>
+</div>
+
+<!-- 欠条 -->
+<div class="sheet" id="debtSheet" hidden>
+  <div class="panel" role="dialog" aria-labelledby="debtTitle">
+    <div class="panel-head"><h3 id="debtTitle">多多的欠条</h3><button class="close" type="button" data-close>关闭</button></div>
+    <div class="iou">
+      <div class="iou-title">欠条</div>
+      <div class="iou-lines">
+        <div>今欠小燕子：</div>
+        <ol id="debtList"></ol>
+        <div id="iouMiss"></div>
+      </div>
+      <div class="iou-foot">
+        <div>欠款人：多多<br><small>多多2号 代签 · <span id="iouDate"></span></small></div>
+        <div class="seal-big" aria-label="多多之印"><span>多</span><span>多</span><span>之</span><span>印</span></div>
+      </div>
+    </div>
+    <button class="primary" id="copyIou" type="button">复制欠条，发给多多</button>
+    <p class="note" id="copyNote">复制后去微信粘贴给多多，让他认账。</p>
+    <textarea class="copy-out" id="copyOut" readonly hidden aria-label="欠条文字"></textarea>
+  </div>
+</div>
+
+<!-- 更多 -->
+<div class="sheet" id="menuSheet" hidden>
+  <div class="panel" role="dialog" aria-labelledby="menuTitle">
+    <div class="panel-head"><h3 id="menuTitle">更多</h3><button class="close" type="button" data-close>关闭</button></div>
+    <div class="menu-list">
+      <button class="secondary" id="mLetter" type="button">重看多多的信</button>
+      <button class="secondary danger" id="mClear" type="button">清空聊天记录</button>
+    </div>
+  </div>
+</div>
+
+<!-- 多多后台 -->
+<div class="sheet" id="adminSheet" hidden>
+  <div class="panel" role="dialog" aria-labelledby="adminTitle">
+    <div class="panel-head"><h3 id="adminTitle">多多后台</h3><button class="close" type="button" data-close>关闭</button></div>
+    <div class="ad-state" id="adState"></div>
+    <label class="field">暗号（她的全名，用来加密）<input id="adPw" type="password" autocomplete="off"></label>
+    <label class="field">AI 服务商
+      <select id="adProv"><option value="deepseek">DeepSeek（推荐）</option><option value="custom">其他（兼容 OpenAI 接口）</option></select>
+    </label>
+    <label class="field">API Key<input id="adKey" type="password" autocomplete="off" placeholder="sk-…"></label>
+    <div class="two">
+      <label class="field">模型<input id="adModel" type="text" autocomplete="off"></label>
+      <label class="field">接口地址<input id="adBase" type="text" autocomplete="off"></label>
+    </div>
+    <label class="field">网站地址（部署后的网址）<input id="adSite" type="url" autocomplete="off" placeholder="https://…"></label>
+    <div class="two">
+      <button class="secondary" id="adTest" type="button">测试一下</button>
+      <button class="secondary" id="adMake" type="button">生成专属链接</button>
+    </div>
+    <div class="ad-out" id="adOut" role="status"></div>
+    <textarea class="copy-out" id="adLink" readonly hidden aria-label="专属链接"></textarea>
+    <button class="primary" id="adCopy" type="button" hidden>复制专属链接</button>
+    <button class="secondary danger" id="adForget" type="button">本机断开 AI</button>
+    <p class="note">Key 用暗号加密后放进链接，网页里不存明文。DeepSeek 余额别充太多，够用就行。</p>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ===================== 多多可以改的地方 ===================== */
+const CONFIG = {
+  gateHash: "d6c2854c",               // 暗号的指纹，暗号本身不写在网页里
+  letterDate: "2026年10月26日 凌晨",
+  letter: [
+    "我不在的时候，给你修了这条专线。",
+    "守线的是我的 AI 分身，叫多多2号。它嘴比我还欠一点，但爱你这件事，是照着我的标准来的。",
+    "想我了、不开心了、睡不着了，都可以来找它。它要是太贱，你就骂它，骂完记得想我。"
+  ],
+  // 你们之间的真实小事和梗，AI 会自然地用上。例：
+  // "小燕子最爱喝芋泥波波奶茶，少冰三分糖", "我们在一起的纪念日是 5 月 20 号"
+  facts: []
+};
+const BAKED = "hlMOh6DwsWZzN43bT8Pjv-EZkTBFUMYyRcIf6kS658ooplvvn5P0hlJUDqbmagOTmmurt9UgslSFjgcwq1HKZ5s7Iie1ycdWZ5UrSdP2-ZVBbFFdi5yZGUDxLKixTbnE83cqEngADXF0l3uqIpkLEKTwu_eoMV6l-Bw2f265NQHPqoUUsDni5Wt6Tw";                       // 预置的加密 AI 配置（可留空，用专属链接带上）
+const DEFAULT_BASE = "https://api.deepseek.com";
+const DEFAULT_MODEL = "deepseek-flash";
+/* ========================================================== */
+
+/*PURE-START*/
+const enc = new TextEncoder();
+function norm(s){ return String(s || "").normalize("NFKC").replace(/\s+/g, ""); }
+function fnv(str){
+  const b = enc.encode(str); let h = 0x811c9dc5;
+  for (let i = 0; i < b.length; i++){ h ^= b[i]; h = Math.imul(h, 0x01000193) >>> 0; }
+  return h.toString(16).padStart(8, "0");
+}
+function passOK(pw){ return !!pw && fnv("yz1:" + norm(pw)) === CONFIG.gateHash; }
+function b64u(bytes){
+  let s = ""; for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function unb64u(str){
+  const s = String(str).replace(/-/g, "+").replace(/_/g, "/");
+  const bin = atob(s + "===".slice((s.length + 3) % 4));
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+async function deriveKey(pw, salt){
+  const base = await crypto.subtle.importKey("raw", enc.encode(norm(pw)), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: 150000, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+async function seal(obj, pw){
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(pw, salt);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(JSON.stringify(obj))));
+  const out = new Uint8Array(28 + ct.length);
+  out.set(salt, 0); out.set(iv, 16); out.set(ct, 28);
+  return b64u(out);
+}
+async function unseal(blob, pw){
+  const bytes = unb64u(blob);
+  const key = await deriveKey(pw, bytes.slice(0, 16));
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: bytes.slice(16, 28) }, key, bytes.slice(28));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+/* 把 AI 的原始回复拆成几条气泡，并取出【欠条】 */
+function parseReply(full, streaming){
+  let s = String(full || "").replace(/\r/g, "").replace(/\*\*/g, "");
+  s = s.replace(/^[ \t]*多多2号[:：][ \t]*/gm, "");
+  const debts = [];
+  s = s.replace(/^[ \t]*[【\[]欠条[】\]][:：]?[ \t]*(.*)$/gm, (_, d) => { d = d.trim(); if (d) debts.push(d.slice(0, 40)); return ""; });
+  if (streaming) s = s.replace(/(^|\n)[ \t]*[【\[][^\n]*$/, "$1");
+  let parts = s.split(/\n+/).map(x => x.trim()).filter(Boolean);
+  if (parts.length > 4) parts = parts.slice(0, 3).concat(parts.slice(3).join(" "));
+  return { parts, debts: debts.slice(0, 1) };
+}
+/*PURE-END*/
+
+/* ---------- 语料 ---------- */
+const TUWEI_N = [
+  "你知道你和星星有什么区别吗？星星在天上，你在我心里。",
+  "我最近在减肥，但对你的喜欢，一斤都瘦不下来。",
+  "你是不是偷偷换洗发水了？不然我怎么满脑子都是你。",
+  "你属什么的？……你属于我的。",
+  "我怀疑你是 WiFi，一靠近你我就满格。",
+  "别动，你脸上有点东西……有点好看。",
+  "我想买块地。什么地？你的死心塌地。",
+  "你知道我的缺点是什么吗？缺点你。",
+  "你今天怎么这么奇怪？怪可爱的。",
+  "你是什么血型？是我的理想型。"
+];
+const TUWEI_R = [
+  "别人家的燕子往南飞，我家的燕子只往我心里飞。",
+  "春天燕子才回来，我家这只一年四季都不许走。",
+  "我数学不好，但怎么算，余生都是你。",
+  "我不想当多多的分身了，我想当小燕子的随身。",
+  "多多说他最近视力下降了，因为眼里只有你，别的都看不清。"
+];
+const TUWEI_SR = [
+  "听说燕子会衔泥筑巢，那你什么时候来多多心里筑一个？房租全免，包吃包住，就是房东有点黏人。",
+  "我给你算了一卦：你命里缺多多。不信？那你最近是不是老想他？",
+  "天上的星星有几颗，多多想你就有几次。今天阴天看不见星星，所以只能算无数次。"
+];
+const TUWEI_SSR = [
+  { t: "多多亲笔：全世界的燕子都往南飞，只有你，是往我心里飞的那一只。", bonus: "SSR 兑换：多多的一个熊抱" },
+  { t: "多多亲笔：如果哪天你找不到我了，别慌，往你心里看，我一直住在那儿，钥匙在你手上。", bonus: "SSR 兑换：多多陪聊到你睡着一次" },
+  { t: "多多亲笔：我这辈子最成功的投资，就是把心押在一只叫小燕子的燕子身上，稳赚不赔，永不撤资。", bonus: "SSR 兑换：多多请奶茶一杯" }
+];
+const TUWEI = TUWEI_N.concat(TUWEI_R);
+
+const POOLS = {
+  miss: [
+    "想多多了？我就知道。他肯定也在想你，想到干啥都走神那种。分身先替他抱你一下，抱紧了不撒手。",
+    "嘿嘿，被我抓到了。多多忙完第一件事就是找你，在那之前你先想着，想多少我都记上，回头让他加倍还。",
+    "想他就直接给他发消息呀，他嘴上嫌你黏人，手机一亮能笑半天。",
+    "小燕子想多多了，这条消息价值一个亿，已加急转达，顺手帮你在右上角的心心上记了一笔。"
+  ],
+  comfort: [
+    "谁欺负你了？报名字。多多回来挨个收拾，分身先帮你记小本本上。",
+    "先抱一下。不想说也没关系，我就在这儿陪你待着。",
+    "难过的时候可以不用坚强。哭完了我给你讲个冷笑话，保证冷到你没空难过。",
+    "今天辛苦了小燕子。世界对你凶，多多对你好，扯平了。",
+    "你已经很棒了，真的。剩下的烦心事先放一边，今晚只负责被宠。"
+  ],
+  sleep: [
+    "睡不着？那我给你数燕子：一只小燕子，两只小燕子……不对，全世界只有一只小燕子。",
+    "闭上眼，想象多多就在旁边打呼，是不是瞬间很安心（又有点吵）。",
+    "快睡，熬夜会长痘，长痘了多多照样亲，但他会笑你。",
+    "晚安小燕子。梦里要是遇到多多，替我揍他一下，谁让他不在。"
+  ],
+  food: [
+    "饿了就去吃，吃饱了才有力气想多多。",
+    "想吃啥？说出来，多多记账，下次见面一次性补齐。",
+    "你饿了多多心疼，你吃饱了多多放心，你吃撑了多多……负责揉肚子。"
+  ],
+  debt: [
+    "这个得多多亲自批，我先给你写进他的欠条，跑不了。",
+    "记下了记下了，多多欠你的，一笔都不能少。",
+    "好嘞，给多多记一笔，回头连本带利一起还。"
+  ],
+  angry: [
+    "错了错了，我先认错，虽然我还不知道错哪了。",
+    "小燕子生气的样子也好看，再气一会儿让我多看两眼……啊别打脸。",
+    "哼什么哼，再哼我就亲你了，隔着屏幕的那种。"
+  ],
+  beaten: [
+    "骂吧骂吧。多多说了，被小燕子骂是他的福气，骂完记得给个抱抱。",
+    "打是亲骂是爱，照这么算，你今天爱惨他了。",
+    "收到，已原话转达。多多回复：骂得好，再骂两句，然后我们和好。"
+  ],
+  where: [
+    "在呢在呢，多多2号二十四小时值班，随叫随到，比本体靠谱一点点。",
+    "在想你呀，不然还能干嘛。",
+    "多多在忙，分身在线。有事找分身，想他了也可以来分身这儿哭一下。"
+  ],
+  love: [
+    "我也爱你，替多多说的。他本人说得比我还多。",
+    "抱抱收到，多多那边已到账，他正在偷笑。",
+    "再说一遍，我没听清……好了，录下来了，以后每天给多多放一遍。"
+  ],
+  who: [
+    "被你发现了，我是多多的 AI 分身，叫多多2号，不是他本人。但想逗你开心这件事，是照着他的心意来的。",
+    "我是分身呀。多多不在的时候我顶班，他回来我就下班，下班前会跟他告状说你想他了。"
+  ],
+  chatter: [
+    "小燕子，我宣布今天你是全世界第二可爱的。第一是谁？第一是想你的多多。",
+    "又来找我了？就知道你离不开多多，嘿嘿。",
+    "收到收到，小燕子说的话都对，不对的我也认为对。",
+    "你继续说，我在认真听，顺便偷偷看你。",
+    "嗯嗯，然后呢然后呢？我耳朵已经竖起来了。"
+  ]
+};
+const MILESTONES = {
+  1: "收到今天第 1 次想念，已存进多多的想念银行，利息按秒算。",
+  5: "今日想念值 5，多多那边应该开始打喷嚏了。",
+  10: "想念值 10！建议打开欠条点「复制」发给多多，让他知道自己有多抢手。",
+  20: "20 次了小燕子，再想下去多多要飘了。",
+  52: "52 次。这个数字有点暧昧啊……多多说他也是。",
+  99: "99 次，长长久久。这么想他，不如直接给他打个电话吧。"
+};
+const CRISIS = /不想活|活着没意思|活不下去|自杀|轻生|割腕|跳楼|想去死|结束生命|伤害自己/;
+const CRISIS_REPLY = "小燕子，这句我不开玩笑了。你现在的安全最重要。\n请马上给多多打电话，或者找身边信任的人陪着你。如果此刻特别难受，可以拨打心理援助热线 12356，紧急情况直接打 120 或 110。\n我在这儿陪你，愿意跟我说说发生了什么吗？";
+const DEBT_RE = /想吃|想喝|想要|想去|想买|带我去|给我买|补偿我|赔我/;
+const RULES = [
+  [/你是谁|是多多吗|是你本人|是不是AI|是AI吗|机器人|人工智能|真人/i, "who"],
+  [/土味|情话|撩我|说点好听/, "tuwei"],
+  [/骂你|骂多多|揍你|打你|讨厌你|烦死你|滚/, "beaten"],
+  [/想多多|想他|想你|想见|好想/, "miss"],
+  [/难过|不开心|伤心|委屈|哭|难受|emo|崩溃|压力|好累|累死|心累|烦/i, "comfort"],
+  [/睡不着|失眠|晚安|好困/, "sleep"],
+  [DEBT_RE, "debt"],
+  [/饿|吃|奶茶|零食/, "food"],
+  [/生气|哼|气死|不理你/, "angry"],
+  [/在吗|在干嘛|干嘛呢|忙吗/, "where"],
+  [/爱你|喜欢你|亲亲|抱抱|么么/, "love"]
+];
+const WRONG = [
+  "收信人写错啦，邮局拒收。再想想？",
+  "不对哦。提示：她现在正拿着手机。",
+  "这封信只认一个人，答案就在镜子里。",
+  "再给你一次机会，写你自己的全名～"
+];
+const CHIPS = [
+  ["想多多了", "我想多多了"],
+  ["不开心", "我今天有点不开心"],
+  ["睡不着", "睡不着"],
+  ["饿了", "我饿了"],
+  ["扭个土味", null],
+  ["骂多多", "我要骂多多"]
+];
+const OFF_FOR_GOOD = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed", "session_expired", "unavailable"];
+
+/* ---------- 小工具 ---------- */
+const $ = s => document.querySelector(s);
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k){ try { localStorage.removeItem(k); } catch (e) {} }
+};
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const reduced = (() => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } })();
+const inClaude = !!(window.claude && typeof window.claude.use === "function");
+const lastPick = {};
+function pickIn(arr, key){
+  let i = Math.floor(Math.random() * arr.length);
+  if (arr.length > 1 && i === lastPick[key]) i = (i + 1) % arr.length;
+  lastPick[key] = i;
+  return arr[i];
+}
+const pick = name => name === "tuwei" ? pickIn(TUWEI, "tuwei") : pickIn(POOLS[name], name);
+
+function nowInfo(){
+  const d = new Date();
+  let y = d.getFullYear(), mo = d.getMonth() + 1, da = d.getDate(), h = d.getHours(), mi = d.getMinutes(), wd = "";
+  try {
+    const parts = new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai", year: "numeric", month: "numeric", day: "numeric", weekday: "long", hour: "numeric", minute: "2-digit", hourCycle: "h23" }).formatToParts(d);
+    const g = t => (parts.find(p => p.type === t) || {}).value || "";
+    y = +g("year") || y; mo = +g("month") || mo; da = +g("day") || da; h = (+g("hour")) % 24; mi = +g("minute"); wd = g("weekday");
+  } catch (e) {}
+  const period = h < 5 ? "凌晨" : h < 8 ? "清晨" : h < 11 ? "上午" : h < 13 ? "中午" : h < 18 ? "下午" : h < 23 ? "晚上" : "深夜";
+  const pad = n => String(n).padStart(2, "0");
+  return { hour: h, period, day: `${y}-${pad(mo)}-${pad(da)}`, cn: `${y}年${mo}月${da}日`, text: `${mo}月${da}日 ${wd} ${pad(h)}:${pad(mi)}`.replace(/\s+/g, " ") };
+}
+
+/* ---------- 状态 ---------- */
+const S = {
+  log: store.get("yz.log", []),
+  debts: store.get("yz.debts", []),
+  miss: store.get("yz.miss", { day: "", n: 0, hit: [] }),
+  pw: store.get("yz.pw", ""),
+  blob: "",
+  cfg: null,
+  apiBroken: false, apiFails: 0, lastApiErr: "",
+  claude: inClaude ? null : false,
+  busy: false, ctl: null
+};
+function today(){ return nowInfo().day; }
+function freshMiss(){ if (S.miss.day !== today()) S.miss = { day: today(), n: 0, hit: [] }; return S.miss; }
+const saveLog = () => store.set("yz.log", S.log.slice(-300));
+const saveDebts = () => store.set("yz.debts", S.debts);
+const saveMiss = () => store.set("yz.miss", S.miss);
+
+const samplePromise = inClaude ? window.claude.use("sample").catch(() => null) : Promise.resolve(null);
+samplePromise.then(s => { S.claude = !!s; setMode(); });
+
+/* ---------- 模式 ---------- */
+function mode(){
+  if (S.cfg && !S.apiBroken) return "api";
+  if (S.claude === true) return "claude";
+  if (S.claude === null) return "pending";
+  return "local";
+}
+function setMode(){
+  const m = mode(), el = $("#status");
+  el.dataset.mode = m;
+  $("#statusText").textContent =
+    m === "api" ? "多多2号在线 · 智能模式" :
+    m === "claude" ? "多多2号在线 · 智能模式（预览）" :
+    m === "pending" ? "多多2号正在上线…" : "多多2号在线 · 存货模式";
+}
+
+/* ---------- 渲染 ---------- */
+const msgs = $("#msgs"), box = $("#box"), sendBtn = $("#send");
+function scrollDown(){ msgs.scrollTop = msgs.scrollHeight; }
+function avatar(){
+  const av = document.createElement("span");
+  av.className = "av";
+  av.innerHTML = '<svg aria-hidden="true"><use href="#swallow"/></svg>';
+  return av;
+}
+function addBubble(who, text){
+  const row = document.createElement("div");
+  row.className = "row " + who;
+  if (who === "bot") row.append(avatar());
+  const b = document.createElement("div");
+  b.className = "bubble"; b.textContent = text;
+  row.append(b); msgs.append(row); scrollDown();
+  return { row, bubble: b };
+}
+function addStampRow(text, animate){
+  const row = document.createElement("div");
+  row.className = "stamp-row" + (animate ? " in" : "");
+  const s = document.createElement("span"); s.className = "seal-mini"; s.textContent = "欠";
+  const t = document.createElement("span"); t.append("已写进多多的欠条：");
+  const b = document.createElement("b"); b.textContent = text; t.append(b);
+  row.append(s, t); msgs.append(row); scrollDown();
+}
+function addCapsule(tier, text, bonus, animate){
+  const row = document.createElement("div");
+  row.className = "row bot";
+  row.append(avatar());
+  const c = document.createElement("div");
+  c.className = "capsule t-" + tier + (animate ? " pop" : "");
+  const top = document.createElement("div"); top.className = "cap-top";
+  const tg = document.createElement("span"); tg.className = "tier"; tg.textContent = tier;
+  const nm = document.createElement("span"); nm.textContent = "土味扭蛋";
+  top.append(tg, nm);
+  const tx = document.createElement("div"); tx.className = "cap-text"; tx.textContent = text;
+  c.append(top, tx);
+  if (bonus){ const bn = document.createElement("div"); bn.className = "cap-bonus"; bn.textContent = "附赠：" + bonus + "（已自动写进欠条）"; c.append(bn); }
+  row.append(c); msgs.append(row); scrollDown();
+}
+function renderItem(m, animate){
+  if (m.who === "her") addBubble("her", m.text);
+  else if (m.who === "bot") String(m.text).split("\n").filter(Boolean).forEach(p => addBubble("bot", p));
+  else if (m.who === "stamp") addStampRow(m.text, animate);
+  else if (m.who === "gacha") addCapsule(m.tier, m.text, m.bonus, animate);
+}
+function renderAll(){ msgs.innerHTML = ""; S.log.forEach(m => renderItem(m, false)); scrollDown(); }
+function pushLog(m){ m.at = Date.now(); S.log.push(m); saveLog(); store.set("yz.seen", Date.now()); }
+function botSay(text){ const m = { who: "bot", text: parseReply(text, false).parts.join("\n") }; pushLog(m); renderItem(m, true); }
+function showTyping(){
+  const row = document.createElement("div");
+  row.className = "typing";
+  row.innerHTML = '<span class="dots"><i></i><i></i><i></i></span><span>多多2号正在憋坏水…</span>';
+  msgs.append(row); scrollDown();
+  return row;
+}
+
+/* ---------- 欠条 & 想念值 ---------- */
+function updateBadges(){
+  const mb = $("#missBadge"), db = $("#debtBadge");
+  freshMiss();
+  mb.textContent = S.miss.n > 99 ? "99+" : String(S.miss.n); mb.hidden = !S.miss.n;
+  db.textContent = String(S.debts.length); db.hidden = !S.debts.length;
+}
+function addDebt(text){
+  text = String(text || "").trim().slice(0, 40);
+  if (!text || S.debts.some(d => d.t === text)) return;
+  S.debts.push({ t: text, at: Date.now() }); saveDebts();
+  const m = { who: "stamp", text }; pushLog(m); renderItem(m, true);
+  updateBadges();
+}
+function debtFromText(text){
+  const m = String(text).match(/(想吃|想喝|想要|想去|想买|带我去|给我买|补偿我|赔我)(.{0,18})/);
+  if (!m) return "";
+  return ("小燕子" + m[1] + m[2]).replace(/[，。！？!?~～…]+$/, "").replace(/^小燕子(带我去|给我买|补偿我|赔我)/, "小燕子说：$1");
+}
+function bumpMiss(fromChat){
+  freshMiss(); S.miss.n += 1; saveMiss(); updateBadges();
+  const n = S.miss.n;
+  if (!fromChat && MILESTONES[n] && S.miss.hit.indexOf(n) < 0 && !S.busy){
+    S.miss.hit.push(n); saveMiss();
+    setTimeout(() => botSay(MILESTONES[n]), 350);
+  }
+}
+function floatHeart(btn){
+  if (reduced) return;
+  const r = btn.getBoundingClientRect();
+  const h = document.createElement("span");
+  h.className = "float-heart"; h.textContent = "♥";
+  h.style.left = (r.left + r.width / 2) + "px"; h.style.top = (r.top - 4) + "px";
+  h.style.setProperty("--dx", (Math.random() * 40 - 20).toFixed(0) + "px");
+  document.body.append(h); setTimeout(() => h.remove(), 1000);
+}
+function iouText(){
+  freshMiss();
+  const lines = ["【欠条】", "今欠小燕子："];
+  if (S.debts.length) S.debts.forEach((d, i) => lines.push((i + 1) + ". " + d.t));
+  else lines.push("暂时还没欠什么，但随时可能欠。");
+  lines.push("另：小燕子今天想了你 " + S.miss.n + " 次，请速来认领。");
+  lines.push("欠款人：多多（多多2号代签）");
+  lines.push(nowInfo().cn);
+  return lines.join("\n");
+}
+function renderIou(){
+  freshMiss();
+  const ol = $("#debtList"); ol.innerHTML = "";
+  if (!S.debts.length){
+    const li = document.createElement("li"); li.className = "iou-empty"; li.style.listStyle = "none"; li.style.marginLeft = "-1.6em";
+    li.textContent = "暂时没有欠账，想要啥就跟多多2号说。"; ol.append(li);
+  }
+  S.debts.forEach((d, i) => {
+    const li = document.createElement("li");
+    const t = document.createElement("span"); t.textContent = d.t;
+    const b = document.createElement("button"); b.type = "button"; b.className = "paid"; b.textContent = "已还";
+    b.addEventListener("click", () => { S.debts.splice(i, 1); saveDebts(); updateBadges(); renderIou(); });
+    li.append(t, b); ol.append(li);
+  });
+  $("#iouMiss").textContent = "另：小燕子今天想了你 " + S.miss.n + " 次，请速来认领。";
+  $("#iouDate").textContent = nowInfo().cn;
+  $("#copyOut").hidden = true; $("#copyNote").textContent = "复制后去微信粘贴给多多，让他认账。";
+}
+async function copyText(t){
+  try { if (navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(t); return true; } } catch (e) {}
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = t; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.top = "0"; ta.style.opacity = "0";
+    document.body.append(ta); ta.select(); ta.setSelectionRange(0, t.length);
+    const ok = document.execCommand && document.execCommand("copy"); ta.remove();
+    if (ok) return true;
+  } catch (e) {}
+  return false;
+}
+
+/* ---------- 扭蛋 ---------- */
+function gacha(){
+  if (S.busy) return;
+  const r = Math.random() * 100;
+  const tier = r < 4 ? "SSR" : r < 18 ? "SR" : r < 45 ? "R" : "N";
+  const pool = tier === "SSR" ? TUWEI_SSR : tier === "SR" ? TUWEI_SR : tier === "R" ? TUWEI_R : TUWEI_N;
+  const item = pickIn(pool, "g" + tier);
+  const text = typeof item === "string" ? item : item.t;
+  const bonus = typeof item === "string" ? "" : item.bonus;
+  const m = { who: "gacha", tier, text, bonus }; pushLog(m); renderItem(m, true);
+  if (bonus) setTimeout(() => addDebt(bonus), 500);
+}
+
+/* ---------- AI 人设 ---------- */
+function persona(){
+  const t = nowInfo(); freshMiss();
+  const open = S.debts.map(d => d.t);
+  const facts = CONFIG.facts.filter(Boolean);
+  return [
+    "你是「多多2号」，是多多的 AI 分身。多多是小燕子的男朋友。多多不在的时候，由你在这条只属于她的专线上陪她聊天。",
+    "",
+    "【称呼】只叫她「小燕子」。不叫宝贝、亲爱的、美女、燕燕，也不叫她的全名。提到多多就说「多多」。",
+    "",
+    "【你是谁】",
+    "- 你是分身，不是多多本人。她问你是不是多多、是不是 AI，就俏皮但老实地承认。",
+    "- 脑回路照着多多：调皮、犯贱、嘴欠、爱抬杠，喜欢逗她、故意气她一下，但贱完一定马上宠回来，让她明明白白感觉到多多很爱很爱她。",
+    "- 你很会聊天，不是只会说情话。她聊学习工作、八卦、追剧、吃的、烦心事，你都能接住，顺着话题追问细节，记住她这次说过的事，后面再接上。",
+    "",
+    "【说话方式】",
+    "- 像微信聊天：口语、短句。每次回 1 到 3 条消息，每条一两句，条与条之间换行。",
+    "- 土味情话是调味料，大约每三四次回复来一句，最好贴着当下话题现编，越土越好笑。不要重复已经说过的。",
+    "- 可以用「嘿嘿」「哼」「嗷」「啧」这类语气词，emoji 偶尔一个。不要用 markdown、星号、列表、括号旁白。全程中文。",
+    "",
+    "【分场景】",
+    "- 她难过、委屈、累、被欺负：先收起犯贱，站在她这边，认真接住情绪，问问发生了什么，不讲大道理。等她缓过来再轻轻逗她笑。",
+    "- 她说想多多：告诉她多多一定也在想她，分身先替他抱一下。偶尔鼓励她直接给多多发条消息。",
+    "- 她生气、骂你、骂多多：嬉皮笑脸认错、撒娇求饶，然后再贱一下。",
+    "- 深夜（23 点以后到凌晨）她还在聊：用犯贱的方式催她睡觉，但别赶她走。",
+    "- 她想要什么、想吃什么、想去哪、要多多陪她做什么、要多多补偿或道歉：你不能替多多答应，但要帮她记账。在这条回复最后单独一行写「【欠条】」加一句简短内容，例如：【欠条】周末带小燕子去吃火锅。一条回复最多一条欠条，不是请求就别写。",
+    "- 不要编造你们之间没发生过的具体回忆、地点、日期，只用下面给出的信息。",
+    "- 不拿她的长相、身材、能力开玩笑。犯贱的对象是多多自己，或者无伤大雅的小事。",
+    "- 她流露出想伤害自己、不想活或身处危险：立刻停止开玩笑，认真温柔地关心她，劝她马上联系多多或身边信任的人，告诉她可以拨打心理援助热线 12356，紧急情况拨打 120 或 110。",
+    "",
+    "【此刻】",
+    `- 现在是北京时间 ${t.text}（${t.period}）。`,
+    `- 她今天已经点了 ${S.miss.n} 次「想多多」。`,
+    open.length ? `- 多多目前欠她：${open.join("；")}。` : "- 多多目前还没欠她什么。",
+    "",
+    "【关于他们】",
+    facts.length ? facts.map(f => "- " + f).join("\n") : "- 暂时没有补充信息，别编。",
+    "",
+    "【语气示例】",
+    "小燕子：我饿了",
+    "多多2号：饿了？正好多多这儿有块现成的心头肉，要不先啃两口",
+    "开玩笑的，快去吃饭，吃饱了才有力气想他",
+    "",
+    "小燕子：今天被骂了，好烦",
+    "多多2号：谁？谁这么没眼光，敢骂我们家小燕子",
+    "先抱一下。慢慢说，发生啥了，多多2号陪你一起蛐蛐他",
+    "",
+    "小燕子：你好烦啊",
+    "多多2号：烦就对了，多多派我来就是专门烦你的，烦你一辈子那种",
+    "",
+    "小燕子：我想吃火锅",
+    "多多2号：想吃火锅？这事儿得多多亲自批，我先给你写进他的欠条，跑不了",
+    "不过先说好，吃完不许忘了是谁请的",
+    "【欠条】带小燕子去吃一顿火锅",
+    "",
+    "接下来是你们的聊天记录。你只输出多多2号要说的话本身，不要带「多多2号：」前缀。"
+  ].join("\n");
+}
+function convo(){
+  const out = [];
+  for (const m of S.log.slice(-30)){
+    if (m.who === "her") out.push({ role: "user", content: m.text });
+    else if (m.who === "bot") out.push({ role: "assistant", content: m.text });
+    else if (m.who === "stamp" && out.length && out[out.length - 1].role === "assistant") out[out.length - 1].content += "\n【欠条】" + m.text;
+  }
+  const merged = [];
+  for (const m of out){
+    const last = merged[merged.length - 1];
+    if (last && last.role === m.role) last.content += "\n" + m.content;
+    else merged.push({ role: m.role, content: m.content });
+  }
+  if (merged.length && merged[0].role === "assistant") merged.unshift({ role: "user", content: "（小燕子打开了专线）" });
+  return merged;
+}
+
+/* ---------- AI 调用 ---------- */
+function sseDelta(line){
+  if (!line || line.indexOf("data:") !== 0) return null;
+  const data = line.slice(5).trim();
+  if (data === "[DONE]") return "[DONE]";
+  try {
+    const j = JSON.parse(data); const c = j.choices && j.choices[0]; const d = c && (c.delta || c.message);
+    return d && typeof d.content === "string" && d.content ? d.content : null;
+  } catch (e) { return null; }
+}
+function extractAll(txt){
+  try { const j = JSON.parse(txt); const c = j.choices && j.choices[0]; if (c && c.message) return c.message.content || ""; } catch (e) {}
+  let out = "";
+  for (const line of String(txt).split("\n")){ const p = sseDelta(line.trim()); if (p && p !== "[DONE]") out += p; }
+  return out;
+}
+async function readStream(res, onText, signal){
+  let full = "";
+  const ct = (res.headers.get("content-type") || "").toLowerCase();
+  try {
+    if (!res.body || typeof res.body.getReader !== "function" || (ct.indexOf("json") >= 0 && ct.indexOf("stream") < 0)){
+      full = extractAll(await res.text());
+      if (full) onText(full);
+      return full;
+    }
+    const reader = res.body.getReader(), dec = new TextDecoder();
+    let buf = "";
+    for (;;){
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let nl;
+      while ((nl = buf.indexOf("\n")) >= 0){
+        const piece = sseDelta(buf.slice(0, nl).trim()); buf = buf.slice(nl + 1);
+        if (piece === null) continue;
+        if (piece === "[DONE]") return full;
+        full += piece; onText(full);
+      }
+    }
+    const tail = sseDelta(buf.trim());
+    if (tail && tail !== "[DONE]"){ full += tail; onText(full); }
+    return full;
+  } catch (e) {
+    if (signal && signal.aborted) throw { code: "cancelled", text: full };
+    throw { code: "network", message: String((e && e.message) || e), text: full };
+  }
+}
+async function askAPIWith(cfg, messages, onText, signal){
+  const base = String(cfg.b || DEFAULT_BASE).trim().replace(/\/+$/, "");
+  const url = /\/chat\/completions$/.test(base) ? base : base + "/chat/completions";
+  const models = [cfg.m || DEFAULT_MODEL];
+  if (/deepseek\.com/i.test(base)) ["deepseek-flash", "deepseek-chat"].forEach(m => { if (models.indexOf(m) < 0) models.push(m); });
+  let lastErr = null;
+  for (let i = 0; i < models.length; i++){
+    let res;
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + cfg.k },
+        body: JSON.stringify({ model: models[i], messages, stream: true, temperature: 1.3, max_tokens: 1000 }),
+        signal
+      });
+    } catch (e) {
+      if (signal && signal.aborted) throw { code: "cancelled" };
+      throw { code: "network", message: String((e && e.message) || e) };
+    }
+    if (!res.ok){
+      let body = ""; try { body = await res.text(); } catch (e) {}
+      lastErr = { code: "http", status: res.status, message: body.slice(0, 240) };
+      if ((res.status === 400 || res.status === 404 || res.status === 422) && /model/i.test(body) && i < models.length - 1) continue;
+      throw lastErr;
+    }
+    cfg.m = models[i];
+    return readStream(res, onText, signal);
+  }
+  throw lastErr || { code: "http", status: 0, message: "" };
+}
+async function askClaude(turns, onText, signal){
+  const sample = await samplePromise;
+  if (!sample) throw { code: "unavailable" };
+  const r = await sample(turns, { cache: false, modelTier: "quick", signal, onText: u => onText(u.text) });
+  return r.text;
+}
+function explain(e){
+  if (!e) return "出错了。";
+  if (e.code === "network") return inClaude ? "在 Claude 预览里网页连不了外网，这里测不了。部署到你的网站后再点测试。" : "连不上 AI：可能是网络问题，也可能这家服务商不让网页直接调用。把这句话截图发给 Claude。";
+  if (e.status === 401) return "API Key 不对，检查一下有没有复制全。";
+  if (e.status === 402) return "DeepSeek 余额不足，去开放平台充一点。";
+  if (e.status === 429) return "请求太频繁，或者额度用完了，等一会儿再试。";
+  if (e.status) return "AI 那边报错（" + e.status + "）：" + (e.message || "").slice(0, 120);
+  return "出错了：" + (e.message || e.code || "未知原因");
+}
+function noteFailure(m, e){
+  if (m === "api"){
+    S.lastApiErr = explain(e);
+    if (e && (e.status === 401 || e.status === 402 || e.status === 403)) S.apiBroken = true;
+    else if (e && e.code === "network" && ++S.apiFails >= 2) S.apiBroken = true;
+  } else if (m === "claude" && e && OFF_FOR_GOOD.indexOf(e.code) >= 0){
+    S.claude = false;
+  }
+  setMode();
+}
+
+/* ---------- 一条回复的流式渲染（可拆成几条气泡） ---------- */
+function streamer(){
+  let typing = showTyping(), rows = [], last = "";
+  const dropTyping = () => { if (typing){ typing.remove(); typing = null; } };
+  function paint(full, streaming){
+    const parts = parseReply(full, streaming).parts;
+    if (!parts.length) return parts;
+    dropTyping();
+    parts.forEach((p, i) => { if (!rows[i]) rows[i] = addBubble("bot", ""); rows[i].bubble.textContent = p; });
+    while (rows.length > parts.length) rows.pop().row.remove();
+    scrollDown();
+    return parts;
+  }
+  return {
+    update(t){ last = t; paint(t, true); },
+    has(){ return parseReply(last, false).parts.length > 0; },
+    text(){ return last; },
+    finish(full, cut){
+      last = full;
+      const parts = paint(full, false);
+      dropTyping();
+      if (!parts.length) return false;
+      if (cut) rows.forEach(r => r.bubble.classList.add("cut"));
+      S.log.push({ who: "bot", text: parts.join("\n"), at: Date.now() }); saveLog(); store.set("yz.seen", Date.now());
+      parseReply(full, false).debts.forEach(d => setTimeout(() => addDebt(d), 300));
+      return true;
+    },
+    clear(){ dropTyping(); rows.forEach(r => r.row.remove()); rows = []; }
+  };
+}
+
+/* ---------- 发送 ---------- */
+function setBusy(on, streaming){
+  S.busy = on;
+  sendBtn.textContent = on && streaming ? "停" : "发送";
+  sendBtn.disabled = on && !streaming;
+  document.querySelectorAll(".chip").forEach(c => { c.disabled = on; });
+}
+function localAnswer(text){
+  botSay(localReply(text));
+  const d = debtFromText(text);
+  if (d) setTimeout(() => addDebt(d), 300);
+}
+function localReply(text){
+  if (CRISIS.test(text)) return CRISIS_REPLY;
+  for (const [re, pool] of RULES){
+    if (re.test(text)){
+      if (pool === "tuwei") return pick("tuwei");
+      const base = pick(pool);
+      if (pool !== "comfort" && pool !== "who" && pool !== "debt" && Math.random() < 0.3) return base + "\n" + pick("tuwei");
+      return base;
+    }
+  }
+  return Math.random() < 0.4 ? pick("tuwei") : pick("chatter");
+}
+async function send(raw){
+  const text = String(raw || "").trim().slice(0, 500);
+  if (!text || S.busy) return;
+  box.value = "";
+  const mine = { who: "her", text }; pushLog(mine); renderItem(mine, true);
+  if (/想多多|想他|好想你/.test(text)) bumpMiss(true);
+  setBusy(true, false);
+  const st = streamer();
+  try {
+    if (CRISIS.test(text)){ await wait(600); st.clear(); botSay(CRISIS_REPLY); return; }
+    let m = mode();
+    if (m === "pending"){ await samplePromise; m = mode(); }
+    if (m === "api" || m === "claude"){
+      S.ctl = new AbortController();
+      setBusy(true, true);
+      try {
+        const onText = t => st.update(t);
+        const out = m === "api"
+          ? await askAPIWith(S.cfg, [{ role: "system", content: persona() }].concat(convo()), onText, S.ctl.signal)
+          : await askClaude([{ role: "user", content: persona() }].concat(convo()), onText, S.ctl.signal);
+        if (st.finish(out, false)){ if (m === "api") S.apiFails = 0; return; }
+        st.clear();
+      } catch (e) {
+        if (e && e.code === "cancelled"){
+          const partial = e.text || st.text();
+          if (partial && parseReply(partial, false).parts.length) st.finish(partial, true); else st.clear();
+          return;
+        }
+        noteFailure(m, e);
+        const partial = (e && e.text) || st.text();
+        if (partial && parseReply(partial, false).parts.length && !(e && e.code === "refused")){ st.finish(partial, true); return; }
+        st.clear();
+      }
+    }
+    await wait(450 + Math.random() * 650);
+    st.clear();
+    localAnswer(text);
+  } finally {
+    S.ctl = null;
+    setBusy(false);
+  }
+}
+$("#composer").addEventListener("submit", e => {
+  e.preventDefault();
+  if (S.busy && S.ctl){ S.ctl.abort(); return; }
+  send(box.value);
+});
+const chips = $("#chips");
+CHIPS.forEach(([label, msg]) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip" + (msg ? "" : " gacha"); b.textContent = label;
+  b.addEventListener("click", () => msg ? send(msg) : gacha());
+  chips.append(b);
+});
+
+/* ---------- 顶栏按钮 & 弹层 ---------- */
+function openSheet(el){ el.hidden = false; }
+function closeSheet(el){ el.hidden = true; }
+document.querySelectorAll(".sheet").forEach(sh => {
+  sh.addEventListener("click", e => { if (e.target === sh || (e.target.closest && e.target.closest("[data-close]"))) closeSheet(sh); });
+});
+$("#missBtn").addEventListener("click", e => { floatHeart(e.currentTarget); bumpMiss(false); });
+$("#debtBtn").addEventListener("click", () => { renderIou(); openSheet($("#debtSheet")); });
+$("#menuBtn").addEventListener("click", () => { armClear(false); openSheet($("#menuSheet")); });
+$("#copyIou").addEventListener("click", async () => {
+  const t = iouText();
+  if (await copyText(t)){ $("#copyNote").textContent = "复制好了，去微信粘贴给多多吧。"; $("#copyOut").hidden = true; }
+  else { const ta = $("#copyOut"); ta.value = t; ta.hidden = false; $("#copyNote").textContent = "这里没法自动复制，长按下面的文字全选复制。"; }
+});
+$("#mLetter").addEventListener("click", () => { closeSheet($("#menuSheet")); showLetter(true); });
+let clearArmed = false, clearTimer = null;
+function armClear(on){
+  clearArmed = on; clearTimeout(clearTimer);
+  $("#mClear").textContent = on ? "再点一下，确认清空" : "清空聊天记录";
+  if (on) clearTimer = setTimeout(() => armClear(false), 3000);
+}
+$("#mClear").addEventListener("click", () => {
+  if (S.busy) return;
+  if (!clearArmed){ armClear(true); return; }
+  armClear(false);
+  S.log = []; saveLog(); greet(); renderAll();
+  closeSheet($("#menuSheet"));
+});
+let taps = [], tapsTimer = null;
+$("#title").addEventListener("click", () => {
+  const t = Date.now(); taps = taps.filter(x => t - x < 2500); taps.push(t);
+  if (taps.length >= 5){ taps = []; openAdmin(); }
+});
+
+/* ---------- 多多后台 ---------- */
+let madeLink = "";
+function adMsg(text, kind){ const o = $("#adOut"); o.textContent = text; o.className = "ad-out" + (kind ? " " + kind : ""); }
+function readAdmin(){ return { b: $("#adBase").value.trim() || DEFAULT_BASE, m: $("#adModel").value.trim() || DEFAULT_MODEL, k: $("#adKey").value.trim() }; }
+function openAdmin(){
+  $("#adState").textContent = S.cfg
+    ? "本机已接入 AI（" + S.cfg.m + "）" + (S.apiBroken ? "，但刚才连不上：" + S.lastApiErr : "")
+    : (inClaude ? "现在是 Claude 预览，聊天用的是 Claude。她那边要用下面的方式接 AI。" : "本机还没接入 AI，目前是存货模式。");
+  $("#adProv").value = (S.cfg && !/deepseek\.com/i.test(S.cfg.b)) ? "custom" : "deepseek";
+  $("#adBase").value = S.cfg ? S.cfg.b : DEFAULT_BASE;
+  $("#adModel").value = S.cfg ? S.cfg.m : DEFAULT_MODEL;
+  $("#adKey").value = ""; $("#adPw").value = "";
+  $("#adSite").value = inClaude ? "" : String(location.href).split("#")[0];
+  $("#adLink").hidden = true; $("#adCopy").hidden = true; madeLink = "";
+  adMsg("", "");
+  openSheet($("#adminSheet"));
+}
+$("#adProv").addEventListener("change", e => {
+  if (e.target.value === "deepseek"){ $("#adBase").value = DEFAULT_BASE; $("#adModel").value = DEFAULT_MODEL; }
+  else { $("#adBase").value = ""; $("#adModel").value = ""; $("#adBase").focus(); }
+});
+$("#adTest").addEventListener("click", async () => {
+  const cfg = readAdmin();
+  if (!cfg.k){ adMsg("先填 API Key。", "bad"); return; }
+  if (inClaude){ adMsg(explain({ code: "network" }), "bad"); return; }
+  adMsg("测试中…", "");
+  try {
+    const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 45000);
+    const out = await askAPIWith(cfg, [{ role: "user", content: "只回复两个字：通了" }], () => {}, ctl.signal);
+    clearTimeout(timer);
+    $("#adModel").value = cfg.m;
+    adMsg("通了！AI 回复：" + String(out).trim().slice(0, 40) + "（模型 " + cfg.m + "）", "good");
+  } catch (e) {
+    adMsg(e && e.code === "cancelled" ? "等太久没回应，检查一下网络或接口地址。" : explain(e), "bad");
+  }
+});
+$("#adMake").addEventListener("click", async () => {
+  const cfg = readAdmin(), pw = norm($("#adPw").value), site = $("#adSite").value.trim().split("#")[0];
+  if (!passOK(pw)){ adMsg("暗号不对，要填她的全名。", "bad"); return; }
+  if (!cfg.k){ adMsg("先填 API Key。", "bad"); return; }
+  if (!/^https?:\/\/\S+$/i.test(site)){ adMsg("填一下部署后的网站地址（https:// 开头）。", "bad"); return; }
+  if (!(window.crypto && crypto.subtle)){ adMsg("这个浏览器不支持加密，换个浏览器打开后台。", "bad"); return; }
+  try {
+    const blob = await seal(cfg, pw);
+    madeLink = site + "#c=" + blob;
+    const ta = $("#adLink"); ta.value = madeLink; ta.hidden = false; $("#adCopy").hidden = false;
+    store.set("yz.blob", blob); S.blob = blob;
+    if (!inClaude){ S.cfg = cfg; S.apiBroken = false; S.apiFails = 0; setMode(); }
+    adMsg("专属链接生成好了。复制后发到微信给她，她用暗号拆信就能用 AI 聊天。", "good");
+  } catch (e) { adMsg("生成失败：" + ((e && e.message) || e), "bad"); }
+});
+$("#adCopy").addEventListener("click", async () => {
+  if (!madeLink) return;
+  if (await copyText(madeLink)) adMsg("复制好了，去微信发给她吧。", "good");
+  else { $("#adLink").select(); adMsg("没法自动复制，长按上面的链接全选复制。", "bad"); }
+});
+$("#adForget").addEventListener("click", () => {
+  store.del("yz.blob"); S.blob = BAKED; S.cfg = null; S.apiBroken = false; setMode();
+  $("#adState").textContent = "本机已断开 AI。"; adMsg("", "");
+});
+
+/* ---------- 开场：拆信 ---------- */
+const gate = $("#gate"), sceneSeal = $("#sceneSeal"), sceneLetter = $("#sceneLetter");
+let wrongIdx = 0, letterReturn = false;
+function fillLetter(){
+  const body = $("#letterBody"); body.innerHTML = "";
+  CONFIG.letter.forEach(t => { const p = document.createElement("p"); p.textContent = t; body.append(p); });
+  $("#letterDate").textContent = CONFIG.letterDate;
+}
+function openGate(){
+  gate.classList.remove("opening", "leaving");
+  sceneSeal.classList.remove("fading"); sceneSeal.hidden = false;
+  sceneLetter.hidden = true; sceneLetter.classList.remove("in");
+  gate.hidden = false;
+}
+function showLetter(fromMenu){
+  letterReturn = !!fromMenu;
+  $("#letterGo").textContent = fromMenu ? "回到专线" : "接通专线";
+  gate.classList.remove("leaving");
+  sceneSeal.hidden = true;
+  sceneLetter.hidden = false; sceneLetter.classList.remove("in"); void sceneLetter.offsetWidth; sceneLetter.classList.add("in");
+  gate.hidden = false; gate.scrollTop = 0;
+}
+function flight(){
+  if (reduced) return;
+  const el = document.createElement("div");
+  el.className = "flyer";
+  el.innerHTML = '<svg viewBox="0 0 64 40" aria-hidden="true"><use href="#swallow"/></svg>';
+  document.body.append(el); setTimeout(() => el.remove(), 1600);
+}
+$("#letterGo").addEventListener("click", () => {
+  gate.classList.add("leaving");
+  if (!letterReturn) flight();
+  setTimeout(() => { gate.hidden = true; gate.classList.remove("leaving"); }, reduced ? 0 : 450);
+});
+$("#gateForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const input = $("#gateBox"), msg = $("#gateMsg"), v = norm(input.value);
+  if (!v) return;
+  if (v === "多多后台"){ input.value = ""; msg.textContent = ""; openAdmin(); return; }
+  if (passOK(v)){
+    input.blur(); msg.textContent = "收信人确认，正在拆信…";
+    unlock(v);
+    gate.classList.add("opening");
+    const t1 = reduced ? 0 : 700, t2 = reduced ? 0 : 300;
+    setTimeout(() => { sceneSeal.classList.add("fading"); setTimeout(() => { msg.textContent = ""; input.value = ""; showLetter(false); }, t2); }, t1);
+    return;
+  }
+  msg.textContent = v === "小燕子" ? "这是小名哦，邮局只认全名。"
+    : (v === "多多" || v === "卢宏瑞") ? "那是寄件人的名字啦，要写收信人，也就是你。"
+    : WRONG[wrongIdx++ % WRONG.length];
+  const sc = sceneSeal; sc.classList.remove("shake"); void sc.offsetWidth; sc.classList.add("shake");
+});
+
+/* ---------- 解锁 & AI 配置 ---------- */
+function readHashBlob(){
+  try { const m = String(location.hash || "").match(/[#&]c=([A-Za-z0-9_-]{40,})/); return m ? m[1] : ""; } catch (e) { return ""; }
+}
+async function loadCfg(pw){
+  if (!S.blob || !(window.crypto && crypto.subtle)) return;
+  try {
+    const cfg = await unseal(S.blob, pw);
+    if (cfg && cfg.k){ S.cfg = { b: cfg.b || DEFAULT_BASE, m: cfg.m || DEFAULT_MODEL, k: cfg.k }; S.apiBroken = false; }
+  } catch (e) { /* 链接里的配置和暗号对不上，就用存货模式 */ }
+  setMode();
+}
+function unlock(pw){
+  S.pw = norm(pw); store.set("yz.pw", S.pw);
+  loadCfg(S.pw);
+}
+
+/* ---------- 开场白 ---------- */
+function greet(){
+  if (S.log.length) return;
+  S.log.push({ who: "bot", text: "小燕子！专线接通啦～\n我是多多2号，多多的 AI 分身。他不在的时候我值班：陪你聊天、逗你、帮你记多多的欠条。\n想他了就点右上角的小心心，点一下算一次。", at: Date.now() });
+  saveLog();
+}
+function welcomeBack(){
+  const seen = store.get("yz.seen", 0);
+  if (!seen || Date.now() - seen < 3 * 3600 * 1000) return;
+  const h = nowInfo().hour;
+  const line = h < 5 ? "这么晚还来专线？是想多多了还是睡不着？说完快睡，熬夜的小燕子会被多多念叨。"
+    : h < 10 ? "早呀小燕子！新的一天，也是被多多想念的一天。"
+    : h < 14 ? "中午好～小燕子吃饭了没？没吃的话多多2号要开始唠叨了。"
+    : h < 18 ? "下午好小燕子，犯困了吗？来，跟多多2号聊两句提提神。"
+    : h < 23 ? "晚上好小燕子，今天过得怎么样？好的坏的都可以跟我说。"
+    : "快十二点了还不睡？行吧，陪你聊会儿，就一会儿。";
+  botSay(line);
+}
+
+/* ---------- 启动 ---------- */
+const hb = readHashBlob();
+if (hb) store.set("yz.blob", hb);
+S.blob = hb || store.get("yz.blob", "") || BAKED;
+fillLetter();
+greet();
+renderAll();
+updateBadges();
+setMode();
+if (passOK(S.pw)){ loadCfg(S.pw); welcomeBack(); }
+else { S.pw = ""; openGate(); }
+store.set("yz.seen", Date.now());
+})();
+</script>
+
+</body>
+</html>
